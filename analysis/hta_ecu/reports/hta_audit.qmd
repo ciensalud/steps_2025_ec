@@ -1,0 +1,105 @@
+---
+title: "STEPS Ecuador 2025 HTA Data Audit"
+subtitle: "Initial reproducible audit; predictive modeling is out of scope"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+source("../R/00_config.R")
+source("../R/01_validate_inputs.R")
+source("../R/02_derive_hta.R")
+source("../R/03_audit_tables.R")
+
+ecu_raw <- hta_read_ecu_data()
+hta_check_packages("knitr")
+validation <- hta_assert_valid_inputs(ecu_raw)
+ecu_audit <- hta_derive_preliminary(ecu_raw)
+```
+
+## Privacy and Scope
+
+This report reads `ECU_data.xlsx` from a configurable local path. Raw microdata
+are not committed to the public repository and no derived `.rds` artifacts are
+created in this phase.
+
+The audit is limited to schema validation, blood pressure completeness, and a
+preliminary hypertension derivation. Predictive modeling is explicitly out of
+scope for this phase.
+
+## Source Data
+
+The workbook path is:
+
+```{r}
+normalizePath(hta_config$data_path, winslash = "/", mustWork = FALSE)
+```
+
+## Input Validation
+
+### Dimensions
+
+```{r}
+knitr::kable(validation$dimensions)
+```
+
+### Required Variables
+
+```{r}
+knitr::kable(validation$variables)
+```
+
+Required variables include survey design fields, three systolic and diastolic
+blood pressure readings, history of hypertension diagnosis, and medication
+status.
+
+## Blood Pressure Completeness
+
+```{r}
+knitr::kable(hta_bp_completeness_table(hta_clean_bp_readings(ecu_raw)))
+```
+
+```{r}
+knitr::kable(hta_bp_reading_count_table(ecu_audit))
+```
+
+## Preliminary HTA Derivation
+
+Preliminary SBP and DBP are computed as row means across valid readings:
+
+- SBP: `m4a`, `m5a`, `m6a`
+- DBP: `m4b`, `m5b`, `m6b`
+
+The preliminary `hta_140_90_or_meds` flag is positive when mean SBP is at least
+140 mmHg, mean DBP is at least 90 mmHg, or `m7 == 1` indicates current
+medication for hypertension.
+
+```{r}
+knitr::kable(hta_preliminary_summary_table(ecu_audit))
+```
+
+## Methodological Limitations
+
+- This is a preliminary audit derivation, not the final epidemiologic analysis.
+- Missing-value handling is limited to common STEPS special codes and should be
+  reconciled with the official WHO/STEPS processing pipeline before publication.
+- The preliminary blood pressure mean uses all available valid readings. Final
+  reporting may require a protocol-specific average, such as the average of the
+  second and third readings when both exist.
+- The current flag includes measured blood pressure and medication. It should not
+  be used as a predictive-model target with the same blood pressure readings as
+  predictors, because that would introduce information leakage.
+- Survey-weighted estimates and confidence intervals are not produced in this
+  initial audit report.
+
+## Modeling Status
+
+No predictive models are trained in this phase. No model objects, `.rds` files,
+or derived microdata are saved by this report.

@@ -1,8 +1,37 @@
-
-
 backup/
+
+# Local microdata and private analysis inputs
+ECU_*.xlsx
+ECU-*.xlsx
+ECU-*.docx
+data/raw/
+data/private/
+outputs/private/
+outputs/sensitive/
+analysis/hta_ecu/outputs/private/
+analysis/hta_ecu/outputs/sensitive/
+
+# R and RStudio
 .Rhistory
+.Rapp.history
+.RData
+.RDataTmp
+.Ruserdata
+.Rproj.user/
+.Renviron
+
+# Quarto, knitr, and rendered caches
+.quarto/
+_freeze/
+*_cache/
+/cache/
+*.utf8.md
+*.knit.md
+
+# Excel temporary lock files
+~$*.xls*
+
+# Operating system files
 .DS_Store
-
-
-.Rproj.user
+Thumbs.db
+desktop.ini
